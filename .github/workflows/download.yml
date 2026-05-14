@@ -1,4 +1,4 @@
-name: YouTube MP3
+name: YouTube MP3 Downloader
 
 on:
   workflow_dispatch:
@@ -8,35 +8,39 @@ on:
         required: true
 
 jobs:
-  mp3:
+  download:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install tools
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
-          pip install yt-dlp
+          pip install -U yt-dlp
 
-      - name: Download audio
+      - name: Download MP3
         run: |
-          mkdir -p downloads
+          mkdir -p music
 
           yt-dlp \
-          --extract-audio \
+          -x \
           --audio-format mp3 \
           --audio-quality 0 \
-          -o "downloads/%(title)s.%(ext)s" \
+          --restrict-filenames \
+          -o "music/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
 
-          echo "FILES:"
-          ls -lah downloads
+          ls -lh music
 
-      - name: Upload artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mp3
-          path: downloads/*
+      - name: Push file
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add music/*
+          git commit -m "add mp3" || echo "nothing to commit"
+          git push
