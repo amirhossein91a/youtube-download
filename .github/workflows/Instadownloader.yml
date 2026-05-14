@@ -1,0 +1,50 @@
+name: Instagram Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Instagram Post/Reel URL"
+        required: true
+        type: string
+
+jobs:
+  download:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install yt-dlp
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install yt-dlp
+
+      - name: Create folders
+        run: |
+          mkdir -p downloads
+
+      - name: Download Instagram Media
+        run: |
+          yt-dlp \
+          --no-playlist \
+          --restrict-filenames \
+          -o "downloads/%(title).80s.%(ext)s" \
+          "${{ github.event.inputs.url }}"
+
+      - name: Show downloaded files
+        run: |
+          ls -lh downloads
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+
+          git add downloads/
+
+          git commit -m "Instagram download" || echo "Nothing to commit"
+
+          git push
+
