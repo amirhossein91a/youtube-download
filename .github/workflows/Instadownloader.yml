@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       url:
-        description: "Instagram Post/Reel URL"
+        description: "Instagram URL"
         required: true
         type: string
 
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install yt-dlp
@@ -21,30 +21,24 @@ jobs:
           python3 -m pip install --upgrade pip
           pip install yt-dlp
 
-      - name: Create folders
-        run: |
-          mkdir -p downloads
+      - name: Create downloads folder
+        run: mkdir -p downloads
 
-      - name: Download Instagram Media
+      - name: Download media
         run: |
-          yt-dlp \
+          yt-dlp -v \
           --no-playlist \
           --restrict-filenames \
-          -o "downloads/%(title).80s.%(ext)s" \
+          -o "downloads/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
 
-      - name: Show downloaded files
+      - name: List downloaded files
         run: |
-          ls -lh downloads
+          echo "Downloaded files:"
+          ls -lah downloads
 
-      - name: Commit and Push
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-
-          git add downloads/
-
-          git commit -m "Instagram download" || echo "Nothing to commit"
-
-          git push
-
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: instagram-download
+          path: downloads/
