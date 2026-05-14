@@ -13,18 +13,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install yt-dlp
         run: |
-          python3 -m pip install --upgrade pip
-          pip install yt-dlp
+          python3 -m pip install -U yt-dlp
 
-      - name: Create downloads folder
+      - name: Create folder
         run: mkdir -p downloads
 
-      - name: Download media
+      - name: Test yt-dlp
+        run: |
+          yt-dlp --version
+
+      - name: Download Instagram
         run: |
           yt-dlp -v \
           --no-playlist \
@@ -32,13 +34,13 @@ jobs:
           -o "downloads/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
 
-      - name: List downloaded files
+      - name: Check files
         run: |
-          echo "Downloaded files:"
-          ls -lah downloads
+          echo "FILES:"
+          find downloads
 
-      - name: Upload artifact
+      - name: Upload files
         uses: actions/upload-artifact@v4
         with:
           name: instagram-download
-          path: downloads/
+          path: downloads
