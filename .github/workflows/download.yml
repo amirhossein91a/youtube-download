@@ -1,4 +1,4 @@
-name: YouTube MP3 Downloader
+name: YouTube MP3
 
 on:
   workflow_dispatch:
@@ -8,39 +8,35 @@ on:
         required: true
 
 jobs:
-  download:
+  mp3:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install ffmpeg + yt-dlp
+      - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y ffmpeg
-          python3 -m pip install -U yt-dlp
+          pip install yt-dlp
 
-      - name: Create downloads folder
-        run: mkdir -p downloads
-
-      - name: Download MP3
+      - name: Download audio
         run: |
+          mkdir -p downloads
+
           yt-dlp \
-          -x \
+          --extract-audio \
           --audio-format mp3 \
           --audio-quality 0 \
-          --restrict-filenames \
           -o "downloads/%(title)s.%(ext)s" \
           "${{ github.event.inputs.url }}"
 
-      - name: Show files
-        run: |
+          echo "FILES:"
           ls -lah downloads
 
-      - name: Upload MP3
+      - name: Upload artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: youtube-mp3
-          path: downloads/
-
+          name: mp3
+          path: downloads/*
